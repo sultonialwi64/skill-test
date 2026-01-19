@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Http\Requests\StorePostRequest;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -31,31 +32,27 @@ class PostController extends Controller
         return "posts.create";
     }
 
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
       
-        $validated = $request->validate([
-            'title' => 'required|string|max:200',
-            'body' => 'required|string', 
-            'published_at' => 'nullable|date',
-        ]);
+      // Mengambil data langsung dari request yang sudah tervalidasi
+    $post = $request->user()->posts()->create([
+        'title'        => $request->title,
+        'content'      => $request->body, // 'body' dari input form masuk ke kolom 'content' DB
+        'published_at' => $request->published_at ?? now(), // Default ke waktu sekarang jika kosong
+        'is_draft'     => $request->boolean('is_draft'), // Mengambil nilai boolean (true/false)
+    ]);
 
-        $post = Auth::user()->posts()->create([
-            'title' => $validated['title'],
-            'content' => $validated['body'], 
-            'published_at' => $validated['published_at'] ?? now(),
-            'is_draft' => $request->boolean('is_draft'),
-        ]);
-
-        return response()->json($post, 201);
+    // Mengembalikan response JSON dengan status 201 (Created)
+    return response()->json($post, 201);
     }
 
     
     public function edit(Post $post)
-    {
-        $this->authorize('update', $post);
-        return "posts.edit";
-    }
+{
+    $this->authorize('update', $post); 
+    return "posts.edit";
+}
 
     public function update(Request $request, Post $post)
     {
