@@ -8,7 +8,7 @@ Route::prefix('api')->group(function () {
     
     // 4-1 & 4-4: Route Public
     Route::get('/posts', [PostController::class, 'index']);
-    Route::get('/posts/{id}', [PostController::class, 'show']);
+    Route::get('/posts/{post}', [PostController::class, 'show']);
 
     // 4-2 sampai 4-7: Route yang butuh Login (Session)
     Route::middleware('auth')->group(function () {

@@ -19,12 +19,15 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
-    public function show($id)
-    {
-       
-        $post = Post::active()->with('user')->findOrFail($id);
-        return response()->json($post);
+   public function show(Post $post) // Gunakan Model Binding
+{
+    // Pastikan post yang dicari adalah post yang 'active'
+    if ($post->is_draft || ($post->published_at && $post->published_at > now())) {
+        abort(404); // Syarat 4-4
     }
+
+    return response()->json($post->load('user')); // Eager load author sesuai syarat 4-1
+}
 
   
     public function create()
@@ -32,21 +35,19 @@ class PostController extends Controller
         return "posts.create";
     }
 
-    public function store(StorePostRequest $request)
-    {
-      
-      // Mengambil data langsung dari request yang sudah tervalidasi
+  public function store(StorePostRequest $request)
+{
+    $validated = $request->validated(); // Best practice: ambil data yang sudah lolos validasi
+
     $post = $request->user()->posts()->create([
-        'title'        => $request->title,
-        'content'      => $request->body, // 'body' dari input form masuk ke kolom 'content' DB
-        'published_at' => $request->published_at ?? now(), // Default ke waktu sekarang jika kosong
-        'is_draft'     => $request->boolean('is_draft'), // Mengambil nilai boolean (true/false)
+        'title'        => $validated['title'],
+        'content'      => $validated['body'], 
+        'published_at' => $validated['published_at'] ?? now(),
+        'is_draft'     => $request->boolean('is_draft'),
     ]);
 
-    // Mengembalikan response JSON dengan status 201 (Created)
     return response()->json($post, 201);
-    }
-
+}
     
     public function edit(Post $post)
 {
@@ -76,11 +77,10 @@ class PostController extends Controller
     }
 
     public function destroy(Post $post)
-    {
-        
-        $this->authorize('delete', $post);
-        $post->delete();
+{
+    $this->authorize('delete', $post); // Syarat 4-7
+    $post->delete();
 
-        return response()->json(['message' => 'Post deleted successfully']);
-    }
+    return response()->noContent(); // Menghasilkan status 204
+}
 }
