@@ -4,25 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post extends Model
 {
     use HasFactory;
 
-    // Tambahkan ini agar fungsi store() tidak error "Mass Assignment"
     protected $fillable = ['title', 'content', 'is_draft', 'published_at', 'user_id'];
 
-    public function scopeActive($query)
-{
-    return $query->where('is_draft', false)
-                 ->where(function ($q) {
-                     $q->whereNull('published_at')
-                       ->orWhere('published_at', '<=', now());
-                 });
-}
+    // WAJIB: Cast published_at agar Carbon bisa membandingkan waktu dengan akurat
+    protected $casts = [
+        'published_at' => 'datetime',
+        'is_draft' => 'boolean',
+    ];
 
-    public function user()
+    public function scopeActive($query)
     {
-        return $this->belongsTo(User::class); //
+        // Syarat 4-1 & 4-4: Bukan draft DAN sudah masuk waktu publikasi
+        return $query->where('is_draft', false)
+                     ->whereNotNull('published_at') // Pastikan ada tanggalnya
+                     ->where('published_at', '<=', now());
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }
