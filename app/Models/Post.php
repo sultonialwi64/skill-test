@@ -7,6 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Post extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
+
+    // Tambahkan ini agar fungsi store() tidak error "Mass Assignment"
+    protected $fillable = ['title', 'content', 'is_draft', 'published_at', 'user_id'];
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_draft', false)
+                     ->where('published_at', '<=', now()); //
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class); //
+    }
 }
