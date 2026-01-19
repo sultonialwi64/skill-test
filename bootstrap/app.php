@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->encryptCookies(except: ['appearance']);
 
+        // Tambahkan ini agar Session tetap aktif di route prefix api
+        $middleware->statefulApi(); 
+
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
@@ -24,5 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // PENTING: Paksa semua error (termasuk 401 unauthenticated) keluar sebagai JSON
+        $exceptions->shouldRenderGroupErrorsAsJson();
     })->create();
