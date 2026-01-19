@@ -19,14 +19,11 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
-   public function show(Post $post) // Gunakan Model Binding
+ public function show($id)
 {
-    // Pastikan post yang dicari adalah post yang 'active'
-    if ($post->is_draft || ($post->published_at && $post->published_at > now())) {
-        abort(404); // Syarat 4-4
-    }
-
-    return response()->json($post->load('user')); // Eager load author sesuai syarat 4-1
+    // Cari yang active dan muat data user
+    $post = Post::active()->with('user')->findOrFail($id);
+    return response()->json($post);
 }
 
   
